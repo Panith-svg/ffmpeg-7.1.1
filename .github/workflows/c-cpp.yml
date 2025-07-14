@@ -1,0 +1,39 @@
+name: Build FFmpeg
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y yasm pkg-config libx264-dev libx265-dev libvpx-dev libfdk-aac-dev libmp3lame-dev
+
+    - name: Configure FFmpeg
+      run: |
+        ./configure --enable-gpl --enable-libx264 --enable-libx265 --enable-libvpx --enable-libfdk-aac --enable-libmp3lame --enable-shared
+
+    - name: Build FFmpeg
+      run: |
+        make -j$(nproc)
+
+    - name: Upload FFmpeg binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: ffmpeg-binaries
+        path: |
+          ffmpeg
+          ffprobe
+          ffplay
+          *.so*
