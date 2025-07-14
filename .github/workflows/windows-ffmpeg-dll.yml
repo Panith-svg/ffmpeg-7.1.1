@@ -1,0 +1,40 @@
+name: Build FFmpeg DLLs for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install MSYS2 and build tools
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-yasm
+            git
+        # You may need to add more packages if you want other codecs!
+
+      - name: Configure and build FFmpeg (shared libs only)
+        shell: msys2 {0}
+        run: |
+          pacman -S --noconfirm make
+          ./configure --prefix=/c/ffmpeg-build --enable-shared --disable-static
+          make -j$(nproc)
+          make install
+
+      - name: Upload DLL artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-dlls
+          path: /c/ffmpeg-build/bin/*.dll
