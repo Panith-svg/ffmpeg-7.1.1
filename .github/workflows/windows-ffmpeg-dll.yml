@@ -1,40 +1,55 @@
-name: Build FFmpeg DLLs for Windows
+name: Build FFmpeg DLLs (Windows)
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install MSYS2 and build tools
+      - name: Install MSYS2 & toolchain
         uses: msys2/setup-msys2@v2
         with:
           update: true
           install: >-
-            base-devel
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-yasm
             git
-        # You may need to add more packages if you want other codecs!
+            make
+            yasm
+            pkg-config
+            mingw-w64-x86_64-toolchain
 
-      - name: Configure and build FFmpeg (shared libs only)
+      - name: Set up MSYS2 shell
         shell: msys2 {0}
         run: |
-          pacman -S --noconfirm make
-          ./configure --prefix=/c/ffmpeg-build --enable-shared --disable-static
+          pacman -S --noconfirm git make yasm pkg-config mingw-w64-x86_64-toolchain
+
+      - name: Configure FFmpeg
+        shell: msys2 {0}
+        run: |
+          ./configure --toolchain=msvc --arch=x86_64 --enable-shared --disable-static --prefix=/c/ffmpeg-build
+
+      - name: Build FFmpeg
+        shell: msys2 {0}
+        run: |
           make -j$(nproc)
           make install
 
-      - name: Upload DLL artifacts
+      - name: List all DLLs (debug)
+        shell: msys2 {0}
+        run: |
+          find . -type f -iname "*.dll" || true
+          ls -lR /c/ffmpeg-build || true
+
+      - name: Upload ALL DLL artifacts (recursively)
         uses: actions/upload-artifact@v4
         with:
-          name: ffmpeg-dlls
-          path: /c/ffmpeg-build/bin/*.dll
+          name: ffmpeg-dlls-all
+          path: '**/*.dll'
