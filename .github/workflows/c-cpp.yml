@@ -12,31 +12,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y yasm pkg-config libx264-dev libx265-dev libvpx-dev libfdk-aac-dev libmp3lame-dev
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential yasm pkg-config libx264-dev libx265-dev libvpx-dev libfdk-aac-dev libmp3lame-dev
 
-    - name: Make configure executable
-      run: chmod +x ./configure
+      - name: Make all shell scripts executable
+        run: |
+          find . -name "*.sh" -exec chmod +x {} \;
 
-    - name: Configure FFmpeg
-      run: |
-        ./configure --enable-gpl --enable-nonfree --enable-libx264 --enable-libx265 --enable-libvpx --enable-libfdk-aac --enable-libmp3lame --enable-shared
+      - name: Configure FFmpeg
+        run: |
+          ./configure --enable-gpl --enable-nonfree --enable-libx264 --enable-libx265 --enable-libvpx --enable-libfdk-aac --enable-libmp3lame --enable-shared
 
-    - name: Build FFmpeg
-      run: |
-        make -j$(nproc)
+      - name: Build FFmpeg
+        run: |
+          make -j$(nproc)
 
-    - name: Upload FFmpeg binaries
-      uses: actions/upload-artifact@v4
-      with:
-        name: ffmpeg-binaries
-        path: |
-          ffmpeg
-          ffprobe
-          ffplay
-          *.so*
+      - name: Upload FFmpeg binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-binaries
+          path: |
+            ffmpeg
+            ffprobe
+            ffplay
+            *.so*
