@@ -31,7 +31,7 @@ jobs:
       shell: msys2 {0}
       run: |
         pacman -S --noconfirm git make yasm pkg-config mingw-w64-x86_64-toolchain
-        ./configure --toolchain=msvc --enable-shared --disable-static --enable-gpl --enable-version3 --enable-nonfree
+        ./configure --enable-shared --disable-static --enable-gpl --enable-version3 --enable-nonfree
         make -j$(nproc)
 
     - name: Upload FFmpeg binaries
